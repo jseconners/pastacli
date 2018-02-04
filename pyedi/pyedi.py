@@ -16,7 +16,7 @@ import click
 import requests
 from urllib.parse import urljoin
 
-config = {}
+creds = ()
 base_url = 'https://pasta.lternet.edu'
 
 
@@ -65,12 +65,11 @@ def cli():
 
 
 @cli.command()
-@click.option('--password', prompt=True, hide_input=True,
+@click.option('--uid', prompt='EDI Data system UID:')
+@click.option('--pass', prompt=True, hide_input=True,
               confirmation_prompt=True)
-def auth():
-    data = open(eml_file, 'rb').read()
-    res = _post(urljoin(base_url, '/package/evaluate/eml'))
-    status_check(res, 202)
+def auth(uid, pass):
+    creds = (uid, pass)
 
 
 if __name__ == '__main__':
