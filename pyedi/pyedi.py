@@ -16,7 +16,7 @@ import click
 import requests
 from urllib.parse import urljoin
 
-creds = ()
+config = {}
 base_url = 'https://pasta.lternet.edu'
 
 
@@ -65,8 +65,9 @@ def cli():
 
 
 @cli.command()
-@click.argument('eml_file', type=click.Path(exists=True))
-def evaluate(eml_file):
+@click.option('--password', prompt=True, hide_input=True,
+              confirmation_prompt=True)
+def auth():
     data = open(eml_file, 'rb').read()
     res = _post(urljoin(base_url, '/package/evaluate/eml'))
     status_check(res, 202)
