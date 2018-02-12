@@ -1,4 +1,5 @@
-# pyedi
+# pastacli
 
-Python CLI for interacing with the Environmental Data Initiative (EDI) data system 
-API.
+Command line interface for interacting with the Provenance Aware Synthesis
+Tracking Architecture (PASTA), the system that runs the Environmental Data
+Initiative (EDI) data repository.
