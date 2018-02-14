@@ -8,24 +8,18 @@ import pastacli.utils.core as ucore
 def auth():
     pass
 
-
-@auth.command()
-def list():
-    print(base_url)
-
-
-@auth.command()
+@auth.command('store')
 @click.option('--label', prompt="Label for auth info")
 @click.option('--uname', prompt="Username")
 @click.option('--passw', prompt=True, hide_input=True, confirmation_prompt=True)
-def store(label, uname, passw):
+def store_auth(label, uname, passw):
     _store_auths(label, uname, passw)
     click.echo()
     click.echo("Stored username and password for {}".format(label))
     click.echo()
 
-@auth.command()
-def show():
+@auth.command('list')
+def list_auths():
     auths = _read_auths()
     click.echo()
     click.echo("Credentials stored for:")

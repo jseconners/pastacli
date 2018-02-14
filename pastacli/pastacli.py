@@ -12,15 +12,20 @@ import sys
 import os
 import json
 import click
-from .commands.auth import auth
 
+# sub-command groups
+from .commands.auth import auth       # credentials storage
+from .commands.ls import ls           # list commands
+from .commands.search import search   # search commands
 
 @click.group()
 def cli():
     pass
 
-# add auth commands
+# add sub-command groups
 cli.add_command(auth)
+cli.add_command(ls)
+cli.add_command(search)
 
 if __name__ == '__main__':
     cli()
