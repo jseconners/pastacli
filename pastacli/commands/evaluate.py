@@ -4,14 +4,15 @@ import json
 import click
 import xmltodict
 from time import sleep
-from urllib.parse import parse_qsl
 import pastacli.utils
 
 
 @click.command()
 @click.option('--verbose', '-v', is_flag=True)
+@click.option('--xml', 'output_format', flag_value='xml', default=True)
+@click.option('--json', 'output_format', flag_value='json')
 @click.argument('eml_file', type=click.Path(exists=True))
-def evaluate(verbose, eml_file):
+def evaluate(output_format, verbose, eml_file):
     """
     Evaluate a data package
     """
@@ -41,7 +42,10 @@ def evaluate(verbose, eml_file):
             return
 
         # display report
-        click.echo(report)
+        if output_format=='json':
+            click.echo(json.dumps(xmltodict.parse(report)))
+        else:
+            click.echo(report)
 
 def _evaluate_eml(f):
     url = pastacli.utils.make_url('package/evaluate/eml')
