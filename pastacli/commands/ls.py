@@ -7,6 +7,7 @@ import pastacli.utils.core as ucore
 
 @click.group('list')
 def ls():
+    """ List data packages and entities and associated elements """
     pass
 
 @ls.command('data-entities')
@@ -17,7 +18,7 @@ def list_data_entities(scope, id, revision):
     url = ucore.make_url('package/data/eml', scope, id, revision)
     res = ucore.get(url)
     ucore.status_check(res, [200])
-    click.echo(res.status_code)
+    click.echo(res.text)
 
 
 @ls.command('data-descendants')

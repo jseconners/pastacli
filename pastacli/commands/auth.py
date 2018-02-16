@@ -6,12 +6,14 @@ import pastacli.utils.core as ucore
 
 @click.group()
 def auth():
+    """ Manage authentication credentials """
     pass
 
 @auth.command('store')
 @click.option('--label', prompt="Label for auth info")
 @click.option('--uname', prompt="Username")
-@click.option('--passw', prompt=True, hide_input=True, confirmation_prompt=True)
+@click.option('--passw', prompt="Password",
+              hide_input=True, confirmation_prompt=True)
 def store_auth(label, uname, passw):
     _store_auths(label, uname, passw)
     click.echo()
