@@ -1,7 +1,7 @@
 import os
 import json
 import click
-import pastacli.utils.core as ucore
+import pastacli.utils
 
 
 @click.group()
@@ -33,15 +33,15 @@ def list_auths():
 
 def _read_auths():
     auths = {}
-    if not os.path.exists(ucore.CONFIG_DIR):
-        os.makedirs(ucore.CONFIG_DIR)
-    if os.path.exists(ucore.AUTH_FILE):
-        with open(ucore.AUTH_FILE) as f:
+    if not os.path.exists(pastacli.utils.CONFIG_DIR):
+        os.makedirs(pastacli.utils.CONFIG_DIR)
+    if os.path.exists(pastacli.utils.AUTH_FILE):
+        with open(pastacli.utils.AUTH_FILE) as f:
             auths = json.loads(f.read())
     return auths
 
 def _store_auths(label, uname, passw):
     auths = _read_auths()
     auths[label] = (uname, passw)
-    with open(ucore.AUTH_FILE, 'w') as f:
+    with open(pastacli.utils.AUTH_FILE, 'w') as f:
         json.dump(auths, f)

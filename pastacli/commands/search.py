@@ -4,7 +4,7 @@ import json
 import click
 import xmltodict
 from urllib.parse import parse_qsl
-import pastacli.utils.core as ucore
+import pastacli.utils
 
 
 @click.command()
@@ -39,9 +39,9 @@ def search(page, output_format, query):
 
 
 def _query(d, output_format):
-    url = ucore.make_url('package/search/eml', query=d)
-    res = ucore.get(url)
-    ucore.status_check(res, [200])
+    url = pastacli.utils.make_url('package/search/eml', query=d)
+    res = pastacli.utils.get(url)
+    pastacli.utils.status_check(res, [200])
 
     res_dict = xmltodict.parse(res.text)
     if output_format=='json':

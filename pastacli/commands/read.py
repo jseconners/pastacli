@@ -3,7 +3,7 @@ import sys
 import json
 import click
 import xmltodict
-import pastacli.utils.core as ucore
+import pastacli.utils
 
 
 @click.group('read')
@@ -19,9 +19,9 @@ def rd():
 @click.option('--xml', 'output_format', flag_value='xml', default=True)
 @click.option('--json', 'output_format', flag_value='json')
 def read_data_package(scope, id, revision, output_format):
-    url = ucore.make_url('package/metadata/eml', scope, id, revision)
-    res = ucore.get(url)
-    ucore.status_check(res, [200])
+    url = pastacli.utils.make_url('package/metadata/eml', scope, id, revision)
+    res = pastacli.utils.get(url)
+    pastacli.utils.status_check(res, [200])
 
     if output_format=='json':
         res_dict = xmltodict.parse(res.text)
