@@ -8,8 +8,6 @@ Initiative (EDI) data repository.
 This CLI implements functionality based on the API documented here:
 http://pastaplus-core.readthedocs.io/en/latest/index.html
 
-.. code-block:: python
-
     >>> pastacli list package-identifiers knb-lter-cce
     9
     10
