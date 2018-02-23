@@ -13,9 +13,8 @@ import json
 import click
 
 # sub-command groups
-from .commands.auth import auth       # credentials storage
-from .commands.ls import ls           # list commands
-from .commands.search import search   # search commands
+from .commands.ls import ls
+from .commands.search import search
 from .commands.read import rd
 from .commands.evaluate import evaluate
 
@@ -28,7 +27,6 @@ def cli():
     pass
 
 # add sub-command groups
-cli.add_command(auth)
 cli.add_command(ls)
 cli.add_command(search)
 cli.add_command(rd)

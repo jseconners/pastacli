@@ -60,14 +60,14 @@ def status_check(res, expected=[]):
     if (expected and (res.status_code not in expected)):
         try:
             res.raise_for_status()
-            # if it doesn't raise an error, but still isn't the expected
-            # response code
-            click.echo("Code {} received and not expected".format(
-                res.status_code))
-            sys.exit()
         except requests.exceptions.HTTPError as e:
             click.echo(e)
-
+        else:
+            # didn't raise an error, but still isn't the expected response code
+            click.echo(
+                "Code {} received and not expected".format(res.status_code)
+            )
+            sys.exit()            
 
 def check_exists(url):
     """
