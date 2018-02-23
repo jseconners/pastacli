@@ -1,3 +1,8 @@
+################################################################################
+#
+# sub command(s) for searching data packages
+#
+################################################################################
 import os
 import sys
 import json
@@ -8,11 +13,11 @@ import pastacli.utils
 
 
 @click.command()
+@click.argument('query')
 @click.option('--page', is_flag=True)
 @click.option('--xml', 'output_format', flag_value='xml', default=True)
 @click.option('--json', 'output_format', flag_value='json')
-@click.argument('query')
-def search(page, output_format, query):
+def search(query, page, output_format):
     """
     Perform searches using Solr queries
     """
@@ -39,6 +44,10 @@ def search(page, output_format, query):
 
 
 def _query(d, output_format):
+    """
+    Format, query and output query results in specified format and return
+    the number of records found for further results paging if necessary
+    """
     url = pastacli.utils.make_url('package/search/eml', query=d)
     res = pastacli.utils.get(url)
     pastacli.utils.status_check(res, [200])

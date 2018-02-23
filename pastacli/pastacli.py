@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 ################################################################################
 #
 # pastacli - Command line interface (CLI) for interacting with the Environmental

@@ -1,3 +1,8 @@
+################################################################################
+#
+# sub command(s) for evaluation a data package
+#
+################################################################################
 import os
 import sys
 import json
@@ -35,7 +40,6 @@ def evaluate(output_format, verbose, eml_file):
                 break
             sleep(3)
 
-
         # display and exit if there was an evaluation error
         if error_status==200:
             click.echo(error)
@@ -47,27 +51,31 @@ def evaluate(output_format, verbose, eml_file):
         else:
             click.echo(report)
 
+
 def _evaluate_eml(f):
+    """
+    Post EML file for evaluation and throw exception if
+    not accepted
+    """
     url = pastacli.utils.make_url('package/evaluate/eml')
     res = pastacli.utils.post(url, data=f.read())
     pastacli.utils.status_check(res, [202])
     return res.text
 
 
-def _check_exists(url):
-    content = None
-    res = pastacli.utils.get(url)
-    pastacli.utils.status_check(res, [200, 404])
-    if res.status_code==200:
-        content = res.text
-    return (res.status_code, content)
-
-
 def _get_eval_report(eval_id):
+    """
+    Check for the existence of the evaluation report for evaluation with
+    identifier: eval_id
+    """
     url = pastacli.utils.make_url('package/evaluate/report/eml', eval_id)
-    return _check_exists(url)
+    return pastacli.utils.check_exists(url)
 
 
 def _check_eval_error(eval_id):
+    """
+    Check for the existence of an evaluation error for evaluation with
+    identifier: eval_id
+    """
     url = pastacli.utils.make_url('package/error/eml', eval_id)
-    return _check_exists(url)
+    return pastacli.utils.check_exists(url)
