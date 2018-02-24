@@ -13,11 +13,11 @@ import pastacli.utils
 
 
 @click.command()
-@click.option('--verbose', '-v', is_flag=True)
+@click.argument('eml_file', type=click.Path(exists=True))
 @click.option('--xml', 'output_format', flag_value='xml', default=True)
 @click.option('--json', 'output_format', flag_value='json')
-@click.argument('eml_file', type=click.Path(exists=True))
-def evaluate(output_format, verbose, eml_file):
+@click.option('--verbose', '-v', is_flag=True)
+def evaluate(eml_file, output_format, verbose):
     """
     Evaluate a data package
     """
@@ -31,7 +31,7 @@ def evaluate(output_format, verbose, eml_file):
         # check for evaluation error
         error_status, error = _check_eval_error(eval_id)
 
-        # keep checking for an error or a report
+        # status loop: keep checking for an error or a report
         while error_status==404:
             if verbose:
                 click.echo(".... No error, still working")

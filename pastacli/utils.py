@@ -9,13 +9,19 @@ import click
 import requests
 from urllib.parse import urlencode
 
-BASE_URL = 'https://pasta.lternet.edu'
-CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.pastacli')
-AUTH_FILE = os.path.join(CONFIG_DIR, '.auth')
+HOSTS = {
+    'staging': 'https://pasta-s.lternet.edu',
+    'production': 'https://pasta.lternet.edu'
+}
 
-################################################################################
-# UTILITIES
-################################################################################
+BASE_URL = HOSTS['production']
+CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.pastacli')
+
+
+def set_host(host):
+    if (host in HOSTS):
+        BASE_URL = HOSTS[host]
+
 
 def make_url(*parts, query={}):
     """
@@ -27,15 +33,15 @@ def make_url(*parts, query={}):
     return url
 
 
-def get(url):
+def get(url, **opts):
     """
     Perform a get request
     """
     try:
-        res = requests.get(url)
+        res = requests.get(url, **opts)
     except requests.exceptions.RequestException:
         print("Failed retrieving {}".format(url)) >> sys.stderr
-        sys.exit(1)
+        raise click.Abort()
     return res
 
 
@@ -47,7 +53,7 @@ def post(url, **opts):
         res = requests.post(url, **opts)
     except requests.exceptions.RequestException:
         print("Failed post request to {}".format(url)) >> sys.stderr
-        sys.exit(1)
+        raise click.Abort()
     return res
 
 
@@ -67,7 +73,7 @@ def status_check(res, expected=[]):
             click.echo(
                 "Code {} received and not expected".format(res.status_code)
             )
-            sys.exit()            
+            raise click.Abort()
 
 def check_exists(url):
     """
