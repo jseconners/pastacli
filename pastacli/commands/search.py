@@ -16,7 +16,9 @@ import pastacli.utils
 @click.argument('query')
 @click.option('--all', '-a', is_flag=True,
               help="Get all search results. Overrides 'start' and 'row' params")
-def search(query, all):
+@click.option('--count', '-c', is_flag=True,
+              help="Get result count. Overrides all other options and params")
+def search(query, all, count):
     """
     Search data packages using a Solr query
     See https://wiki.apache.org/solr/ for Solr query syntax
@@ -35,10 +37,18 @@ def search(query, all):
 
     d['start'], d['rows'] = start, rows
 
-    # if user specifies all records to be retrieved, just get a single
-    # record first and set 'rows' according to @numFound
+    # get the result count for the query
+    result_num = _result_num(d)
+
+    # just return the result count if requested and exit
+    if count:
+        click.echo(result_num)
+        sys.exit()
+
+    # update to return all rows if specified
     # Note: this overrides any user provided 'start' or 'rows' params
     if all:
+        d['start'] = 0
         d['rows'] = _result_num(d)
 
     # now query and stream result to handle possibly large result sets
