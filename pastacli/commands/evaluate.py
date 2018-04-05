@@ -25,7 +25,7 @@ def evaluate(eml_file, output_format, verbose):
 
         # post eml for evaluation
         if verbose:
-            click.echo("Submitting for evaluation")
+            click.echo("Submitting for evaluation", err=True)
         eval_id = _evaluate_eml(f)
 
         # check for evaluation error
@@ -34,7 +34,7 @@ def evaluate(eml_file, output_format, verbose):
         # status loop: keep checking for an error or a report
         while error_status==404:
             if verbose:
-                click.echo(".... No error, still working")
+                click.echo(".... No error, still working", err=True)
             report_status, report = _get_eval_report(eval_id)
             if report_status==200:
                 break
@@ -42,7 +42,7 @@ def evaluate(eml_file, output_format, verbose):
 
         # display and exit if there was an evaluation error
         if error_status==200:
-            click.echo(error)
+            click.echo(error, err=True)
             return
 
         # display report
