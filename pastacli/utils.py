@@ -75,6 +75,7 @@ def status_check(res, expected=[]):
             )
             raise click.Abort()
 
+
 def check_exists(url):
     """
     Check for the existence of a resource and return
@@ -85,7 +86,7 @@ def check_exists(url):
     status_check(res, [200, 404])
     if res.status_code==200:
         content = res.text
-    return (res.status_code, content)
+    return res.status_code, content
 
 
 def get_list(*parts, query={}):
