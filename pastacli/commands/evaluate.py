@@ -12,7 +12,11 @@ import pastacli.utils
 
 @click.command()
 @click.argument('eml_file', type=click.Path(exists=True))
-@click.option('--mode', type=click.Choice(['interactive', 'file', 'value']))
+@click.option('--mode',
+              type=click.Choice(['interactive', 'file', 'value']),
+              default='interactive',
+              help="interactive (default): Verbose CLI, file: save results to error.txt or report.log "
+                   "value: callable by other code with True|False return value")
 def evaluate(eml_file, mode):
     """
     Evaluate a data package
