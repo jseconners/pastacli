@@ -7,9 +7,6 @@
 #
 ################################################################################
 
-import sys
-import os
-import json
 import click
 import pastacli.utils
 
@@ -20,15 +17,17 @@ from .commands.read import rd
 from .commands.evaluate import evaluate
 from .commands.upload import upload
 
+
 @click.group()
 @click.option('--staging', is_flag=True)
-def cli(staging):
+@click.pass_context
+def cli(ctx, staging):
     """
     CLI for interacting with the PASTAplus data system hosted by the
     Environmental Data Initiative (EDI)
     """
-    if staging:
-        pastacli.utils.set_host('staging')
+    ctx.obj['staging'] = staging
+
 
 # add sub-command groups
 cli.add_command(ls)
@@ -39,4 +38,4 @@ cli.add_command(upload)
 
 
 if __name__ == '__main__':
-    cli()
+    cli(obj={})

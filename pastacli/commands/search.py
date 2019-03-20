@@ -3,9 +3,8 @@
 # sub command(s) for searching data packages
 #
 ################################################################################
-import os
+
 import sys
-import json
 import click
 import xmltodict
 from urllib.parse import parse_qsl
@@ -14,11 +13,11 @@ import pastacli.utils
 
 @click.command()
 @click.argument('query')
-@click.option('--all', '-a', is_flag=True,
+@click.option('--get-all', '-a', is_flag=True,
               help="Get all search results. Overrides 'start' and 'row' params")
 @click.option('--count', '-c', is_flag=True,
               help="Get result count. Overrides all other options and params")
-def search(query, all, count):
+def search(query, get_all, count):
     """
     Search data packages using a Solr query
     See https://wiki.apache.org/solr/ for Solr query syntax
@@ -30,8 +29,8 @@ def search(query, all, count):
     # necessary. Defaults 0,10 are same as the server
     try:
         start = int(d.get('start', 0))
-        rows  = int(d.get('rows', 10))
-    except:
+        rows = int(d.get('rows', 10))
+    except Exception:
         click.echo("'start' and 'rows' parameters must be integer values")
         raise click.Abort()
 
@@ -47,7 +46,7 @@ def search(query, all, count):
 
     # update to return all rows if specified
     # Note: this overrides any user provided 'start' or 'rows' params
-    if all:
+    if get_all:
         d['start'] = 0
         d['rows'] = _result_num(d)
 
