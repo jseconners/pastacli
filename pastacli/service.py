@@ -41,25 +41,23 @@ class APIClient:
     def make_url(self, *parts):
         return "/".join([p.strip('/') for p in [self.base_url] + list(parts)])
 
-    def get(self, *parts, params=None):
-        url = self.make_url(parts)
-        return requests.get(url, params=params)
-
-    def post_file(self, *parts, filepath='', auth=True, params={}):
+    def get(self, *parts, **params):
         url = self.make_url(*parts)
-        files = {'file': open(filepath, 'rb')}
-        if auth:
-            return requests.post(url, auth=HTTPBasicAuth(self.username, self.password), files=files, **params)
-        else:
-            return requests.post(url, files=files, **params)
+        return requests.get(url, **params)
 
-    def put_file(self, *parts, filepath='', auth=True):
-        url = self.make_url(parts)
-        files = {'file': open(filepath, 'rb')}
+    def post(self, *parts, auth=True, **params):
+        url = self.make_url(*parts)
         if auth:
-            return requests.put(url, auth=HTTPBasicAuth(self.username, self.password), files=files)
+            return requests.post(url, auth=HTTPBasicAuth(self.username, self.password), **params)
         else:
-            return requests.put(url, files=files)
+            return requests.post(url, **params)
+
+    def put_file(self, *parts, auth=True, **params):
+        url = self.make_url(*parts)
+        if auth:
+            return requests.put(url, auth=HTTPBasicAuth(self.username, self.password), **params)
+        else:
+            return requests.put(url, **params)
 
 
 class PASTAClient(APIClient):
@@ -95,10 +93,11 @@ class PackageEvaluator(PASTAClient):
 
     def post_evaluate(self):
         params = {
-            'headers': {'Content-Type': 'application/xml'}
+            'headers': {'Content-Type': 'application/xml'},
+            'files': {'file': open(self.data_package.filepath(), 'rb')}
         }
-        res = self.post_file(self.ENDPOINTS['evaluate'], params=params, filepath=self.data_package.filepath(), auth=False)
-        if res == 202:
+        res = self.post(self.ENDPOINTS['evaluate'], auth=False, **params)
+        if res.status_code == 202:
             self.transaction_id = res.text.strip()
             return True
         else:
@@ -111,7 +110,6 @@ class PackageEvaluator(PASTAClient):
 
         error, report = self.evaluate_status()
         while (error is None) and (report is None):
-            click.echo("looping")
             sleep(3)
             error, report = self.evaluate_status()
 
