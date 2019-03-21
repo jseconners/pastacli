@@ -17,10 +17,12 @@ from time import sleep
 @click.option('--no-eval', is_flag=True, help="Don't evaluate first")
 @click.pass_context
 def upload(ctx, eml_file, uname, passw, mode, no_eval):
-    """
-    Upload (create | update) a data package
-    """
-    click.echo("upload")
+    """ Upload (create | update) a data package """
+
+    verbose_print = pastacli.utils.get_verbose_print(verbose)
+
+
+
 
 #
 # def _get_doi(scope, dataset_id, revision):

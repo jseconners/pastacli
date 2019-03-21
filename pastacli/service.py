@@ -129,3 +129,83 @@ class PackageEvaluator:
             return res.text
         else:
             return False
+
+
+class PackageUploader:
+    ENDPOINTS = {
+        'upload': 'package/eml',
+        'doi': 'package/doi/eml',
+        'resource': 'package/eml',
+        'error': 'package/error/eml'
+    }
+
+    def __init__(self, data_package, pasta_client):
+        self.pasta_client = pasta_client
+        self.data_package = data_package
+        self.transaction_id = None
+
+    def create_package(self):
+        endpoint = self.ENDPOINTS['upload']
+        params = {
+            'headers': {'Content-Type': 'application/xml'},
+            'data': open(self.data_package.filepath(), 'rb').read()
+        }
+        res = self.pasta_client.post(endpoint, auth=True, **params)
+        if res.status_code == 202:
+            self.transaction_id = res.text.strip()
+            return True
+        else:
+            return False
+
+    def update_package(self):
+        endpoint = self.ENDPOINTS['upload']
+        params = {
+            'headers': {'Content-Type': 'application/xml'},
+            'data': open(self.data_package.filepath(), 'rb').read()
+        }
+        res = self.pasta_client.post(endpoint, auth=True, **params)
+        if res.status_code == 202:
+            self.transaction_id = res.text.strip()
+            return True
+        else:
+            return False
+
+    def evaluate(self):
+        res = self.post_evaluate()
+        if res is False:
+            return None, None
+
+        error, report = self.evaluate_status()
+        while (error is None) and (report is None):
+            sleep(3)
+            error, report = self.evaluate_status()
+
+        if report:
+            return True, report
+        elif error:
+            return False, error
+        else:
+            return None, None
+
+    def evaluate_status(self):
+        return self.check_error(), self.get_resource_map()
+
+    def check_error(self):
+        endpoint = self.ENDPOINTS['error']
+        res = self.pasta_client.get(endpoint, self.transaction_id)
+        if res.status_code == 404:
+            return None
+        elif res.status_code == 200:
+            return res.text
+        else:
+            return False
+
+    def get_resource_map(self):
+        endpoint = self.ENDPOINTS['resource']
+        res = self.pasta_client.get(endpoint, self.transaction_id)
+        if res.status_code == 404:
+            return None
+        elif res.status_code == 200:
+            return res.text
+        else:
+            return False

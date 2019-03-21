@@ -12,11 +12,15 @@ from pastacli.service import DataPackage, PackageEvaluator
 @click.command()
 @click.argument('eml_file', type=click.Path(exists=True))
 @click.option('--verbose', is_flag=True, help="Verbose")
+@click.option('--internal', is_flag=True, help="Return value. For invoking from other command")
 @click.pass_context
-def evaluate(ctx, eml_file, verbose):
-    """
-    Evaluate a data package
-    """
+def evaluate(ctx, eml_file, verbose, internal):
+    """ Evaluate a data package """
+
+    # override verbosity if internal invocation
+    if internal:
+        verbose = False
+
     verbose_print = pastacli.utils.get_verbose_print(verbose)
 
     # instantiate data package and evaluator
