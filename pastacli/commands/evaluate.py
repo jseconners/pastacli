@@ -13,11 +13,11 @@ from pastacli.service import DataPackage, PackageEvaluator
 @click.argument('eml_file', type=click.Path(exists=True))
 @click.option('--verbose', is_flag=True, help="Verbose")
 @click.pass_context
-def evaluate(ctx, eml_file, verbose):
+def evaluate(ctx, eml_file, verbose, value_return):
     """
     Evaluate a data package
     """
-    # verbose_print = pastacli.utils.get_verbose_print(verbose)
+    verbose_print = pastacli.utils.get_verbose_print(verbose)
 
     data_package = DataPackage(eml_file)
     package_evaluator = PackageEvaluator(data_package)
@@ -26,14 +26,15 @@ def evaluate(ctx, eml_file, verbose):
     else:
         package_evaluator.use_production()
 
+    verbose_print("Submitting {} for evaluation ...".format(eml_file))
     status, result = package_evaluator.evaluate()
 
     if status is True:
-        click.echo("Evaluation successful")
+        verbose_print("Evaluation successful.")
     elif status is False:
-        click.echo("Evaluation failed")
+        verbose_print("Evaluation failed.")
     else:
-        click.echo("Something else")
+        verbose_print("An unknown error occurred.")
 
 
 def _write_output_file(content, filename):

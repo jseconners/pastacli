@@ -7,7 +7,6 @@ import requests
 from requests.auth import HTTPBasicAuth
 import xml.etree.ElementTree as ET
 from time import sleep
-import click
 
 
 class DataPackage:
@@ -94,7 +93,7 @@ class PackageEvaluator(PASTAClient):
     def post_evaluate(self):
         params = {
             'headers': {'Content-Type': 'application/xml'},
-            'files': {'file': open(self.data_package.filepath(), 'rb')}
+            'data': open(self.data_package.filepath(), 'rb').read()
         }
         res = self.post(self.ENDPOINTS['evaluate'], auth=False, **params)
         if res.status_code == 202:
