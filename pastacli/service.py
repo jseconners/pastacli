@@ -23,12 +23,25 @@ class DataPackage:
         return self.eml_file_path
 
 
-class APIClient:
+class PASTAClient:
+    HOSTS = {
+        'staging': 'https://pasta-s.lternet.edu',
+        'production': 'https://pasta.lternet.edu'
+    }
 
     def __init__(self):
         self.username = None
         self.password = None
         self.base_url = None
+        self.host_set = False
+
+    def use_production(self):
+        self.set_base_url(self.HOSTS['production'])
+        self.host_set = True
+
+    def use_staging(self):
+        self.set_base_url(self.HOSTS['staging'])
+        self.host_set = True
 
     def set_credentials(self, username, password):
         self.username = username
@@ -57,25 +70,6 @@ class APIClient:
             return requests.put(url, auth=HTTPBasicAuth(self.username, self.password), **params)
         else:
             return requests.put(url, **params)
-
-
-class PASTAClient(APIClient):
-    HOSTS = {
-        'staging': 'https://pasta-s.lternet.edu',
-        'production': 'https://pasta.lternet.edu'
-    }
-
-    def __init__(self):
-        self.host_set = False
-        super(PASTAClient, self).__init__()
-
-    def use_production(self):
-        self.set_base_url(self.HOSTS['production'])
-        self.host_set = True
-
-    def use_staging(self):
-        self.set_base_url(self.HOSTS['staging'])
-        self.host_set = True
 
 
 class PackageEvaluator(PASTAClient):

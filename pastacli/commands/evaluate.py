@@ -13,7 +13,7 @@ from pastacli.service import DataPackage, PackageEvaluator
 @click.argument('eml_file', type=click.Path(exists=True))
 @click.option('--verbose', is_flag=True, help="Verbose")
 @click.pass_context
-def evaluate(ctx, eml_file, verbose, value_return):
+def evaluate(ctx, eml_file, verbose):
     """
     Evaluate a data package
     """
