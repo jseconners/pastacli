@@ -24,23 +24,16 @@ class DataPackage:
 
 
 class PASTAClient:
-    HOSTS = {
-        'staging': 'https://pasta-s.lternet.edu',
-        'production': 'https://pasta.lternet.edu'
-    }
 
-    def __init__(self):
+    def __init__(self, hosts):
+        self.hosts = hosts
         self.username = None
         self.password = None
         self.base_url = None
         self.host_set = False
 
-    def use_production(self):
-        self.set_base_url(self.HOSTS['production'])
-        self.host_set = True
-
-    def use_staging(self):
-        self.set_base_url(self.HOSTS['staging'])
+    def set_host(self, hostname):
+        self.set_base_url(self.hosts[hostname])
         self.host_set = True
 
     def set_credentials(self, username, password):
@@ -72,24 +65,25 @@ class PASTAClient:
             return requests.put(url, **params)
 
 
-class PackageEvaluator(PASTAClient):
+class PackageEvaluator:
     ENDPOINTS = {
         'evaluate': 'package/evaluate/eml',
         'report': 'package/evaluate/report/eml',
         'error': 'package/error/eml'
     }
 
-    def __init__(self, data_package):
-        super(PackageEvaluator, self).__init__()
+    def __init__(self, data_package, pasta_client):
+        self.pasta_client = pasta_client
         self.data_package = data_package
         self.transaction_id = None
 
     def post_evaluate(self):
+        endpoint = self.ENDPOINTS['evaluate']
         params = {
             'headers': {'Content-Type': 'application/xml'},
             'data': open(self.data_package.filepath(), 'rb').read()
         }
-        res = self.post(self.ENDPOINTS['evaluate'], auth=False, **params)
+        res = self.pasta_client.post(endpoint, auth=False, **params)
         if res.status_code == 202:
             self.transaction_id = res.text.strip()
             return True
@@ -117,7 +111,8 @@ class PackageEvaluator(PASTAClient):
         return self.check_error(), self.check_report()
 
     def check_error(self):
-        res = self.get(self.ENDPOINTS['error'], self.transaction_id)
+        endpoint = self.ENDPOINTS['error']
+        res = self.pasta_client.get(endpoint, self.transaction_id)
         if res.status_code == 404:
             return None
         elif res.status_code == 200:
@@ -126,7 +121,8 @@ class PackageEvaluator(PASTAClient):
             return False
 
     def check_report(self):
-        res = self.get(self.ENDPOINTS['report'], self.transaction_id)
+        endpoint = self.ENDPOINTS['report']
+        res = self.pasta_client.get(endpoint, self.transaction_id)
         if res.status_code == 404:
             return None
         elif res.status_code == 200:

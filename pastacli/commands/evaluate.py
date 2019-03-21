@@ -19,12 +19,9 @@ def evaluate(ctx, eml_file, verbose):
     """
     verbose_print = pastacli.utils.get_verbose_print(verbose)
 
+    # instantiate data package and evaluator
     data_package = DataPackage(eml_file)
-    package_evaluator = PackageEvaluator(data_package)
-    if ctx.obj['staging']:
-        package_evaluator.use_staging()
-    else:
-        package_evaluator.use_production()
+    package_evaluator = PackageEvaluator(data_package, ctx.obj['pasta_client'])
 
     verbose_print("Submitting {} for evaluation ...".format(eml_file))
     status, result = package_evaluator.evaluate()

@@ -8,7 +8,8 @@
 ################################################################################
 
 import click
-import pastacli.utils
+
+from pastacli.service import PASTAClient
 
 # sub-command groups
 from .commands.ls import ls
@@ -16,6 +17,11 @@ from .commands.search import search
 from .commands.read import rd
 from .commands.evaluate import evaluate
 from .commands.upload import upload
+
+HOSTS = {
+    'staging': 'https://pasta-s.lternet.edu',
+    'production': 'https://pasta.lternet.edu'
+}
 
 
 @click.group()
@@ -26,7 +32,11 @@ def cli(ctx, staging):
     CLI for interacting with the PASTAplus data system hosted by the
     Environmental Data Initiative (EDI)
     """
-    ctx.obj['staging'] = staging
+    ctx.obj['pasta_client'] = PASTAClient(HOSTS)
+    if staging:
+        ctx.obj['pasta_client'].set_host('staging')
+    else:
+        ctx.obj['pasta_client'].set_host('production')
 
 
 # add sub-command groups
