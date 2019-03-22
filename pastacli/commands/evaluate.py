@@ -6,7 +6,7 @@
 
 import click
 import pastacli.utils
-from pastacli.service import DataPackage, PackageEvaluator
+from pastacli.service import EMLFile, PackageEvaluator
 
 
 @click.command()
@@ -24,14 +24,15 @@ def evaluate(ctx, eml_file, verbose, internal):
     verbose_print = pastacli.utils.get_verbose_print(verbose)
 
     # instantiate data package and evaluator
-    data_package = DataPackage(eml_file)
-    package_evaluator = PackageEvaluator(data_package, ctx.obj['pasta_client'])
+    eml = EMLFile(eml_file)
+    package_evaluator = PackageEvaluator(eml, ctx.obj['pasta_client'])
 
     verbose_print("Submitting {} for evaluation ...".format(eml_file))
-    status, result = package_evaluator.evaluate()
+    status, results = package_evaluator.evaluate()
 
     if status is True:
         verbose_print("Evaluation successful.")
+        verbose_print(results)
     elif status is False:
         verbose_print("Evaluation failed.")
     else:
