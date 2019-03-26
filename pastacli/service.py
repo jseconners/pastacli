@@ -1,68 +1,12 @@
 ################################################################################
 #
-# sub command(s) for evaluation a data package
+#
 #
 ################################################################################
-import requests
-from requests.auth import HTTPBasicAuth
-import xml.etree.ElementTree as ET
 from time import sleep
 
-
-class EMLFile:
-
-    def __init__(self, eml_file_path):
-        self.eml_file_path = eml_file_path
-
-    def getinfo(self):
-        xml_tree = ET.parse(self.eml_file_path)
-        xml_root = xml_tree.getroot()
-        return xml_root.attrib['packageId'].split('.')
-
-    def filepath(self):
-        return self.eml_file_path
-
-
-class PASTAClient:
-
-    def __init__(self, hosts):
-        self.hosts = hosts
-        self.username = None
-        self.password = None
-        self.base_url = None
-        self.host_set = False
-
-    def set_host(self, hostname):
-        self.set_base_url(self.hosts[hostname])
-        self.host_set = True
-
-    def set_credentials(self, username, password):
-        self.username = "uid={},o=LTER,dc=ecoinformatics,dc=org".format(username)
-        self.password = password
-
-    def set_base_url(self, base_url):
-        self.base_url = base_url
-
-    def make_url(self, *parts):
-        return "/".join([p.strip('/') for p in [self.base_url] + list(parts)])
-
-    def get(self, *parts, **params):
-        url = self.make_url(*parts)
-        return requests.get(url, **params)
-
-    def post(self, *parts, auth=True, **params):
-        url = self.make_url(*parts)
-        if auth:
-            return requests.post(url, auth=HTTPBasicAuth(self.username, self.password), **params)
-        else:
-            return requests.post(url, **params)
-
-    def put(self, *parts, auth=True, **params):
-        url = self.make_url(*parts)
-        if auth:
-            return requests.put(url, auth=HTTPBasicAuth(self.username, self.password), **params)
-        else:
-            return requests.put(url, **params)
+from pastacli.eml import EMLFile
+from pastacli.pasta import PASTAClient
 
 
 class PackageEvaluator:
@@ -72,7 +16,7 @@ class PackageEvaluator:
         'error': 'package/error/eml'
     }
 
-    def __init__(self, eml_file, pasta_client):
+    def __init__(self, eml_file: EMLFile, pasta_client: PASTAClient):
         self.pasta_client = pasta_client
         self.eml_file = eml_file
         self.transaction_id = None
@@ -136,7 +80,7 @@ class PackageUploader:
         'error': 'package/error/eml'
     }
 
-    def __init__(self, eml_file, pasta_client):
+    def __init__(self, eml_file: EMLFile, pasta_client: PASTAClient):
         self.pasta_client = pasta_client
         self.eml_file = eml_file
         self.package_info = eml_file.getinfo()
