@@ -2,6 +2,28 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 
+class SimpleResource:
+
+    allowed = [200, 404]
+
+    def __init__(self, res: requests.Response):
+        self.res = res
+
+    def is_valid(self):
+        return self.res.status_code in self.allowed
+
+    def is_found(self):
+        return self.res.status_code == 200
+
+    def content(self):
+        return self.res.text
+
+    def __str__(self):
+        return "Request to {} = {}: {}".format(
+            self.res.url, self.res.status_code, self.res.reason
+        )
+
+
 class PASTAClient:
 
     def __init__(self, hosts):

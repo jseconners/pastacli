@@ -4,9 +4,21 @@
 #
 ################################################################################
 from time import sleep
+import sys
 
 from pastacli.eml import EMLFile
-from pastacli.pasta import PASTAClient
+from pastacli.pasta import PASTAClient, SimpleResource
+
+
+def simple_resource(f):
+    def wrapper():
+        r = SimpleResource(f())
+        if not r.is_valid():
+            print(r)
+            sys.exit()
+        else:
+            return r
+    return wrapper
 
 
 class PackageEvaluator:
@@ -22,14 +34,15 @@ class PackageEvaluator:
         self.transaction_id = None
 
     def evaluate(self):
-        res = self._post_for_evaluation()
+        res = self._submit_package()
+
         if res.status_code != 202:
             return False, res.text
 
         # set transaction id and check for error and success report
         self.transaction_id = res.text.strip()
         error, report = self._check_status()
-        while (error is None) and (report is None):
+        while (not error.is_found()) and (not report.is_found()):
             sleep(3)
             error, report = self._check_status()
 
@@ -40,36 +53,26 @@ class PackageEvaluator:
         else:
             return None, "Unknown error occurred"
 
-    def _post_for_evaluation(self):
+    def _submit_package(self):
         endpoint = self.ENDPOINTS['evaluate']
         params = {
             'headers': {'Content-Type': 'application/xml'},
-            'data': open(self.eml_file.filepath(), 'rb').read()
+            'data': open(self.eml_file.path(), 'rb').read()
         }
         return self.pasta_client.post(endpoint, auth=False, **params)
 
     def _check_status(self):
         return self._check_error(), self._check_report()
 
+    @simple_resource
     def _check_error(self):
         endpoint = self.ENDPOINTS['error']
-        res = self.pasta_client.get(endpoint, self.transaction_id)
-        if res.status_code == 404:
-            return None
-        elif res.status_code == 200:
-            return res.text
-        else:
-            return False
+        return self.pasta_client.get(endpoint, self.transaction_id)
 
+    @simple_resource
     def _check_report(self):
         endpoint = self.ENDPOINTS['report']
-        res = self.pasta_client.get(endpoint, self.transaction_id)
-        if res.status_code == 404:
-            return None
-        elif res.status_code == 200:
-            return res.text
-        else:
-            return False
+        return self.pasta_client.get(endpoint, self.transaction_id)
 
 
 class PackageUploader:
@@ -83,7 +86,6 @@ class PackageUploader:
     def __init__(self, eml_file: EMLFile, pasta_client: PASTAClient):
         self.pasta_client = pasta_client
         self.eml_file = eml_file
-        self.package_info = eml_file.getinfo()
         self.transaction_id = None
         self.results = None
 
@@ -91,12 +93,7 @@ class PackageUploader:
         self.pasta_client.set_credentials(username, password)
 
     def upload(self):
-        scope, dataset_id, revision = self.package_info
-
-        if revision == '1':
-            self._create_package()
-        else:
-            self._update_package()
+        self._submit_package()
 
         error, resource = self._check_status()
         while (error is None) and (resource is None):
@@ -114,25 +111,18 @@ class PackageUploader:
         else:
             return None, None
 
-    def _create_package(self):
+    def _submit_package(self):
         endpoint = self.ENDPOINTS['upload']
+        scope, dataset_id, revision = self.eml_file.package_info()
         params = {
             'headers': {'Content-Type': 'application/xml'},
-            'data': open(self.eml_file.filepath(), 'rb').read()
+            'data': open(self.eml_file.path(), 'rb').read()
         }
-        res = self.pasta_client.post(endpoint, auth=True, **params)
-        if res.status_code != 202:
-            res.raise_for_status()
-        self.transaction_id = res.text.strip()
+        if revision == '1':
+            res = self.pasta_client.post(endpoint, auth=True, **params)
+        else:
+            res = self.pasta_client.put(endpoint, scope, dataset_id, auth=True, **params)
 
-    def _update_package(self):
-        endpoint = self.ENDPOINTS['upload']
-        scope, dataset_id, _ = self.package_info
-        params = {
-            'headers': {'Content-Type': 'application/xml'},
-            'data': open(self.eml_file.filepath(), 'rb').read()
-        }
-        res = self.pasta_client.put(endpoint, scope, dataset_id, auth=True, **params)
         if res.status_code != 202:
             res.raise_for_status()
         self.transaction_id = res.text.strip()
@@ -140,30 +130,17 @@ class PackageUploader:
     def _check_status(self):
         return self._check_error(), self._get_resource_map()
 
+    @simple_resource
     def _check_error(self):
         endpoint = self.ENDPOINTS['error']
-        res = self.pasta_client.get(endpoint, self.transaction_id)
-        if res.status_code == 404:
-            return None
-        elif res.status_code == 200:
-            return res.text
-        else:
-            res.raise_for_status()
+        return self.pasta_client.get(endpoint, self.transaction_id)
 
+    @simple_resource
     def _get_resource_map(self):
         endpoint = self.ENDPOINTS['resource']
-        res = self.pasta_client.get(endpoint, self.transaction_id)
-        if res.status_code == 404:
-            return None
-        elif res.status_code == 200:
-            return res.text
-        else:
-            res.raise_for_status()
+        return self.pasta_client.get(endpoint, self.transaction_id)
 
+    @simple_resource
     def _get_doi(self):
         endpoint = self.ENDPOINTS['doi']
-        res = self.pasta_client.get(endpoint, *self.package_info, self.transaction_id)
-        if res.status_code == 200:
-            return res.text
-        else:
-            res.raise_for_status()
+        return self.pasta_client.get(endpoint, *self.eml_file.package_info())
