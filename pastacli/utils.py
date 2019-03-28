@@ -4,20 +4,16 @@
 #
 ################################################################################
 import os
-import sys
 import click
-import requests
-from urllib.parse import urlencode
-
 
 CONFIG_DIR = os.path.join(os.path.expanduser('~'), '.pastacli')
 
 
-def get_verbose_print(verbose):
-    def print_verbose(txt, err=False):
+def make_verbose_print(verbose):
+    def printer(txt, err=False):
         if verbose:
             click.echo(txt, err=err)
-    return print_verbose
+    return printer
 
 
 def check_exists(url):
@@ -38,6 +34,3 @@ def get_list(*parts, query={}):
     """
     res = get(make_url(*parts, query=query))
     click.echo(res.text)
-
-
-

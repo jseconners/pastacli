@@ -3,10 +3,12 @@
 # sub command(s) for evaluation a data package
 #
 ################################################################################
-
+from time import sleep
 import click
-import pastacli.utils
-from pastacli.service import EMLFile, PackageEvaluator
+
+from pastacli.utils import make_verbose_print
+from pastacli.eml import EMLFile
+from pastacli.service import PackageEvaluator
 
 
 @click.command()
@@ -21,22 +23,25 @@ def evaluate(ctx, eml_file, verbose, internal):
     if internal:
         verbose = False
 
-    verbose_print = pastacli.utils.get_verbose_print(verbose)
+    verbose_print = make_verbose_print(verbose)
 
     # instantiate data package and evaluator
     eml = EMLFile(eml_file)
-    package_evaluator = PackageEvaluator(eml, ctx.obj['pasta_client'])
+    evaluator = PackageEvaluator(eml, ctx.obj['pasta_client'])
 
-    verbose_print("Submitting {} for evaluation ...".format(eml_file))
-    status, results = package_evaluator.evaluate()
+    status_poll = evaluator.evaluate()
 
-    if status is True:
-        verbose_print("Evaluation successful.")
-        verbose_print(results)
-    elif status is False:
-        verbose_print("Evaluation failed.")
-    else:
-        verbose_print("An unknown error occurred.")
+    verbose_print("Evaluating package")
+    for error, report in status_poll:
+        verbose_print("... still working")
+        if error.is_found() or report.is_found():
+            break
+        sleep(3)
+
+    if error.is_found():
+        pass
+    if report.is_found():
+        pass
 
 
 def _write_output_file(content, filename):

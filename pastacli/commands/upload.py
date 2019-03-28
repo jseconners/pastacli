@@ -3,11 +3,11 @@
 # sub command(s) for evaluation a data package
 #
 ################################################################################
-
 import click
-import pastacli.utils
+
 from pastacli.service import EMLFile, PackageUploader
-from .evaluate import evaluate
+from pastacli.utils import make_verbose_print
+# from pastacli.commands.evaluate import evaluate
 from time import sleep
 
 
@@ -21,21 +21,22 @@ from time import sleep
 def upload(ctx, eml_file, username, password, verbose):
     """ Upload (create | update) a data package """
 
-    verbose_print = pastacli.utils.get_verbose_print(verbose)
+    verbose_print = make_verbose_print(verbose)
 
     eml = EMLFile(eml_file)
-    data_uploader = PackageUploader(eml, ctx.obj['pasta_client'])
-    data_uploader.set_credentials(username, password)
+    uploader = PackageUploader(eml, ctx.obj['pasta_client'])
+    uploader.set_credentials(username, password)
 
-    verbose_print("Submitting package")
-    status, result = data_uploader.upload()
+    status_poll = uploader.upload()
 
-    if status is True:
-        verbose_print("Upload successful.")
-        verbose_print(data_uploader.results)
-    elif status is False:
-        verbose_print("Upload failed.")
-        verbose_print(result)
-    else:
-        verbose_print("An unknown error occurred.")
-        verbose_print(result)
+    verbose_print("Uploading package")
+    for error, report in status_poll:
+        verbose_print("... still working")
+        if error.is_found() or report.is_found():
+            break
+        sleep(3)
+
+    if error.is_found():
+        pass
+    if report.is_found():
+        pass

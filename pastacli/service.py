@@ -3,16 +3,15 @@
 #
 #
 ################################################################################
-from time import sleep
 import sys
 
 from pastacli.eml import EMLFile
 from pastacli.pasta import PASTAClient, SimpleResource
 
 
-def simple_resource(f):
-    def wrapper():
-        r = SimpleResource(f())
+def _simple_resource(f):
+    def wrapper(self):
+        r = SimpleResource(f(self))
         if not r.is_valid():
             print(r)
             sys.exit()
@@ -34,24 +33,10 @@ class PackageEvaluator:
         self.transaction_id = None
 
     def evaluate(self):
-        res = self._submit_package()
+        self._submit_package()
 
-        if res.status_code != 202:
-            return False, res.text
-
-        # set transaction id and check for error and success report
-        self.transaction_id = res.text.strip()
-        error, report = self._check_status()
-        while (not error.is_found()) and (not report.is_found()):
-            sleep(3)
-            error, report = self._check_status()
-
-        if report:
-            return True, report
-        elif error:
-            return False, error
-        else:
-            return None, "Unknown error occurred"
+        while True:
+            yield self._check_status()
 
     def _submit_package(self):
         endpoint = self.ENDPOINTS['evaluate']
@@ -59,17 +44,21 @@ class PackageEvaluator:
             'headers': {'Content-Type': 'application/xml'},
             'data': open(self.eml_file.path(), 'rb').read()
         }
-        return self.pasta_client.post(endpoint, auth=False, **params)
+        res = self.pasta_client.post(endpoint, auth=False, **params)
+
+        if res.status_code != 202:
+            res.raise_for_status()
+        self.transaction_id = res.text.strip()
 
     def _check_status(self):
         return self._check_error(), self._check_report()
 
-    @simple_resource
+    @_simple_resource
     def _check_error(self):
         endpoint = self.ENDPOINTS['error']
         return self.pasta_client.get(endpoint, self.transaction_id)
 
-    @simple_resource
+    @_simple_resource
     def _check_report(self):
         endpoint = self.ENDPOINTS['report']
         return self.pasta_client.get(endpoint, self.transaction_id)
@@ -95,21 +84,8 @@ class PackageUploader:
     def upload(self):
         self._submit_package()
 
-        error, resource = self._check_status()
-        while (error is None) and (resource is None):
-            sleep(3)
-            error, resource = self._check_status()
-
-        if resource:
-            self.results = {
-                'doi': self._get_doi(),
-                'resource_map': resource
-            }
-            return True, self.results
-        elif error:
-            return False, error
-        else:
-            return None, None
+        while True:
+            yield self._check_status()
 
     def _submit_package(self):
         endpoint = self.ENDPOINTS['upload']
@@ -130,17 +106,17 @@ class PackageUploader:
     def _check_status(self):
         return self._check_error(), self._get_resource_map()
 
-    @simple_resource
+    @_simple_resource
     def _check_error(self):
         endpoint = self.ENDPOINTS['error']
         return self.pasta_client.get(endpoint, self.transaction_id)
 
-    @simple_resource
+    @_simple_resource
     def _get_resource_map(self):
         endpoint = self.ENDPOINTS['resource']
         return self.pasta_client.get(endpoint, self.transaction_id)
 
-    @simple_resource
+    @_simple_resource
     def _get_doi(self):
         endpoint = self.ENDPOINTS['doi']
         return self.pasta_client.get(endpoint, *self.eml_file.package_info())
