@@ -27,16 +27,22 @@ def upload(ctx, eml_file, username, password, verbose):
     uploader = PackageUploader(eml, ctx.obj['pasta_client'])
     uploader.set_credentials(username, password)
 
+    verbose_print("Uploading package")
     status_poll = uploader.upload()
 
-    verbose_print("Uploading package")
+    # this needs fixing. When updating for an existing
+    # package revision, the resource map is available for
+    # the already submitted package before any error
+    # is reported. How do we wait long enough to see if there
+    # is an error before going into the status loop?
+
     for error, report in status_poll:
-        verbose_print("... still working")
+        verbose_print("... working")
         if error.is_found() or report.is_found():
             break
         sleep(3)
 
     if error.is_found():
-        pass
+        verbose_print(error.content())
     if report.is_found():
-        pass
+        verbose_print(report.content())

@@ -89,10 +89,10 @@ class PackageUploader:
 
     def _submit_package(self):
         endpoint = self.ENDPOINTS['upload']
-        scope, dataset_id, revision = self.eml_file.package_info()
+        scope, dataset_id, revision = self.eml_file.package_info
         params = {
             'headers': {'Content-Type': 'application/xml'},
-            'data': open(self.eml_file.path(), 'rb').read()
+            'data': open(self.eml_file.path, 'rb').read()
         }
         if revision == '1':
             res = self.pasta_client.post(endpoint, auth=True, **params)
@@ -100,7 +100,7 @@ class PackageUploader:
             res = self.pasta_client.put(endpoint, scope, dataset_id, auth=True, **params)
 
         if res.status_code != 202:
-            res.raise_for_status()
+                res.raise_for_status()
         self.transaction_id = res.text.strip()
 
     def _check_status(self):
@@ -114,9 +114,15 @@ class PackageUploader:
     @_simple_resource
     def _get_resource_map(self):
         endpoint = self.ENDPOINTS['resource']
-        return self.pasta_client.get(endpoint, self.transaction_id)
+        return self.pasta_client.get(endpoint, *self.eml_file.package_info)
 
     @_simple_resource
     def _get_doi(self):
         endpoint = self.ENDPOINTS['doi']
-        return self.pasta_client.get(endpoint, *self.eml_file.package_info())
+        return self.pasta_client.get(endpoint, *self.eml_file.package_info)
+
+
+class PackageSearch:
+
+    def __init__(self):
+        pass
