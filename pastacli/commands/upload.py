@@ -35,6 +35,8 @@ def upload(ctx, eml_file, username, password, verbose):
     # the already submitted package before any error
     # is reported. How do we wait long enough to see if there
     # is an error before going into the status loop?
+    sleep(10)
+
 
     for error, report in status_poll:
         verbose_print("... working")
