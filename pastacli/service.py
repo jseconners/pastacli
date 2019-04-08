@@ -4,6 +4,7 @@
 #
 ################################################################################
 import sys
+import xmltodict
 
 from pastacli.eml import EMLFile
 from pastacli.pasta import PASTAClient, SimpleResource
@@ -18,6 +19,53 @@ def _simple_resource(f):
         else:
             return r
     return wrapper
+
+
+class PackageSearcher:
+    ENDPOINTS = {
+        'search': 'package/search/eml'
+    }
+    default_record_window = 0, 10
+
+    def __init__(self, query_dict):
+        self.query_dict = query_dict
+        try:
+            start = int(self.query_dict.get('start'))
+            rows = int(self.query_dict.get('rows'))
+        except ValueError:
+            start, rows = self.default_record_window
+
+        self.set_record_window(start, rows)
+
+    def search(self):
+        return self._do_search()
+
+    def result_count(self):
+        res = self._do_search_count()
+        res_dict = xmltodict.parse(res.content)
+        return int(res_dict['resultset']['@numFound'])
+
+    def set_record_window(self, start, rows):
+        self.query_dict['start'], self.query_dict['rows'] = start, rows
+
+    @_simple_resource
+    def _do_search_count(self):
+        endpoint = self.ENDPOINTS['search']
+        d_temp = self.query_dict.copy()
+        d_temp['start'], d_temp['rows'] = 0, 1
+
+        params = {
+            'params': {'query': d_temp}
+        }
+        return self.pasta_client.get(endpoint, **params)
+
+    def _do_search(self):
+        endpoint = self.ENDPOINTS['search']
+        params = {
+            'params': {'query': self.query_dict},
+            'stream': True
+        }
+        return self.pasta_client.get(endpoint, **params)
 
 
 class PackageEvaluator:
@@ -68,7 +116,7 @@ class PackageUploader:
     ENDPOINTS = {
         'upload': 'package/eml',
         'doi': 'package/doi/eml',
-        'resource': 'package/eml',
+        'resource_map': 'package/eml',
         'error': 'package/error/eml'
     }
 
@@ -113,16 +161,10 @@ class PackageUploader:
 
     @_simple_resource
     def _get_resource_map(self):
-        endpoint = self.ENDPOINTS['resource']
+        endpoint = self.ENDPOINTS['resource_map']
         return self.pasta_client.get(endpoint, *self.eml_file.package_info)
 
     @_simple_resource
     def _get_doi(self):
         endpoint = self.ENDPOINTS['doi']
         return self.pasta_client.get(endpoint, *self.eml_file.package_info)
-
-
-class PackageSearch:
-
-    def __init__(self):
-        pass
