@@ -27,11 +27,17 @@ class PackageSearcher:
     }
     default_record_window = 0, 10
 
-    def __init__(self, query_dict):
+    def __init__(self, pasta_client: PASTAClient):
+        self.query_dict = None
+        self.pasta_client = pasta_client
+
+    def set_query(self, query_dict: dict):
         self.query_dict = query_dict
+        d_start, d_rows = self.default_record_window
+
         try:
-            start = int(self.query_dict.get('start'))
-            rows = int(self.query_dict.get('rows'))
+            start = int(self.query_dict.get('start', d_start))
+            rows = int(self.query_dict.get('rows', d_rows))
         except ValueError:
             start, rows = self.default_record_window
 
@@ -42,7 +48,7 @@ class PackageSearcher:
 
     def result_count(self):
         res = self._do_search_count()
-        res_dict = xmltodict.parse(res.content)
+        res_dict = xmltodict.parse(res.res.content)
         return int(res_dict['resultset']['@numFound'])
 
     def set_record_window(self, start, rows):
