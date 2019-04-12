@@ -68,7 +68,7 @@ class PackageSearcher:
     def _do_search(self):
         endpoint = self.ENDPOINTS['search']
         params = {
-            'params': {'query': self.query_dict},
+            'params': self.query_dict,
             'stream': True
         }
         return self.pasta_client.get(endpoint, **params)
